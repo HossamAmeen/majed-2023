@@ -1,0 +1,23 @@
+Site:
+Configuration
+Users
+Reset Password
+News
+Articles
+Images
+Videos
+About
+Contacts
+Notification
+Migration and Seeds
+APIs (News - Articles - Contacts - Videos) and swagger
+Email (new user - edit profile) 
+Validation 
+Single & Multi Language
+Social Media Configuration
+Image with facebook aspects
+View Image During chossing it
+set basics pages for (home - articles - news - standard)
+Loading Modal
+all titles will use locale
+use notifi message

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <style>
+      * {
+        font-size: 10px;
+        font-family: 'Times New Roman';
+      }
+      table {
+        width: 100%;
+      }
+      th {
+        text-align: right;
+      }
+      th.price-off {
+        width: 40px;
+      }
+      td,
+      th,
+      tr,
+      table {
+        border-top: 1px solid black;
+        border-collapse: collapse;
+      }
+      td.description,
+      th.description {
+        width: 170px;
+        max-width: 170px;
+        word-break: break-all;
+      }
+      td.quantity,
+      th.quantity {
+        width: 50px;
+        max-width: 50px;
+        word-break: break-all;
+      }
+      td.price,
+      th.price {
+        width: 60px;
+        max-width: 60px;
+        word-break: break-all;
+      }
+      td.price-off {
+        width: 20px;
+        word-break: break-all;
+      }
+      .centered {
+        text-align: center;
+        align-content: center;
+      }
+      .ticket {
+        width: 280px;
+      }
+      .last-price {
+        height: 35px;
+      }
+      .black-price {
+        background-color: rgb(148, 148, 148);
+        color: rgb(0, 0, 0);
+      }
+      img {
+        max-width: inherit;
+        width: inherit;
+      }
+      @media print {
+        .hidden-print,
+        .hidden-print * {
+          display: none !important;
+        }
+        body.ticket {
+          width: 58mm
+        }
+        thead {
+          display: table-header-group;
+        }
+        thead,
+        tfoot {
+          break-inside: unset;
+        }
+      }
+    </style>
+  </head>
+  <body dir="rtl">
+    <div class="ticket">
+      <h3 style="text-align: center;"> 4MD
+        <img src="https://majed.ekhsemly.com/4md.jpg" width="25" height="25">
+        <br>
+        <span class="date">2021-02-11 12:42:11</span>
+      </h3>
+      <p class="centered">
+        رقم الفاتورة : 24,<br>
+        اسم العميل : احمد ممدوح
+        <br>
+        تليفون : 01000123456
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th class="description">المنتج</th>
+            <th class="quantity">الكمية</th>
+            <th class="price">السعر</th>
+            <th class="price-off">الخصم</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              600
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              300
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيس جاكيت شامواه بيسبول
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+          <tr>
+            <td class="description">
+              جاكيت شامواه بيسبول جاكيت شامواه بيسبول جاكيت شامواه
+            </td>
+            <td class="quantity">
+              1
+            </td>
+            <td class="price">
+              6000.4
+            </td>
+            <td class="price-off">
+              0
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="last-price">
+        <span class="end-all-price"><b> اجمالى السعر : 600.00</b></span>
+        <br>
+        <span class="end-all-price"><b> اجمالى الخصم : 0</b></span>
+        <br>
+        <span class="end-all-price"><b>المطلوب دفعه : 600.00</b></span>
+      </p>
+    </div>
+  </body>
+</html>

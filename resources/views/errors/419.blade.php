@@ -1,0 +1,1 @@
+<h1 style="text-align: center"><a href="{{url('/')}}">اذهب الي الصفحه الرئيسية</a></h1>

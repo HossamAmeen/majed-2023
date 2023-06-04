@@ -1,0 +1,3 @@
+{{$text}}
+<br>
+name : {{ $name }}

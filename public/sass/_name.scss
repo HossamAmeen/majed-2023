@@ -1,0 +1,88 @@
+* {
+    direction: rtl;
+    font-size: 13px;
+    font-family: 'Times New Roman';
+    box-sizing: border-box;
+}
+h1,h2,h3,h4,h5,p{
+    margin: 0px;
+    text-align: center;
+}
+body{
+    direction: rtl;
+}
+.container{
+    direction: rtl;
+    width: 1170px;
+    margin: 0 auto;
+    .ticket-content{
+        margin-bottom: 30px;
+        height: fit-content;
+        width:30%;
+        border: 2px dotted black;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        h3,.table-footer{
+            padding:10px;
+            background-color: #ddd;
+        }
+        h4{
+            padding:5px;
+            text-align: right;
+            border-bottom: 1px solid black;
+        }
+        .name,.phone{
+            justify-content: flex-start;
+            border-bottom: 1px solid black;
+            span{
+                &:first-child{
+                    margin-left: 10px;
+                }
+            }
+        }
+    .table-data:nth-child(even) {
+        background-color: #ddd;
+      }
+        .table-data,.table-header{
+            display: flex;
+            p{
+                flex: 1;
+                flex-grow: 1;
+                padding:5px;
+                text-align: center;
+            }
+            .quantity{
+                flex: 0.5 !important;
+            }
+            .description{
+                flex: 1.5 !important;
+                text-align: right;
+            }
+
+        }
+        .table-header{
+            p{
+            text-align: center !important;
+            }
+        }
+        .total-pay,.total-price,.total-sale{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding:5px;
+        }
+        .total-price{
+            border-bottom: 1px solid black;
+            border-top: 1px solid black;
+        }
+        .total-pay{
+            background: #000;
+            color: white;
+        }
+    }
+    
+}
+
+
+
