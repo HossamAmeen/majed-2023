@@ -14,6 +14,7 @@
 
         @component('back-end.shared.create')
             <form id="defaultForm" method="post" class="form-horizontal ls_form" action="{{ route($routeName.'.store') }}"
+                    onsubmit="submitForm(); return false;"
                     data-bv-message="This value is not valid"
                     data-bv-feedbackicons-valid="fa fa-check"
                     data-bv-feedbackicons-invalid="fa fa-bug"
@@ -25,14 +26,14 @@
 
                 <div class="form-group">
                     <div class="col-lg-offset-2 col-lg-10">
-                        <button class="btn btn-info" type="submit" onclick="$(this).prop('disabled', true);">  إضافه  </button>
-                    </div>
+                        {{-- <button class="btn btn-info" type="submit" onclick="$(this).prop('disabled', true);">  إضافه  </button> --}}
+                        <button class="btn btn-info" id="submitButton" type="submit" >إضافة جديد</button>                    </div>
                 </div>
              </form>
         @endcomponent
 @endsection
 @push('css')
-      <!-- Responsive Style For-->
+   <!-- Responsive Style For--> 
   <link href="{{asset('panel/assets/css/rtl-css/responsive-rtl.css')}}" rel="stylesheet">
   <!-- Responsive Style For-->
   <link rel="stylesheet" href="{{asset('panel/assets/css/rtl-css/plugins/summernote-rtl.css')}}">
@@ -44,6 +45,12 @@
     <link rel="stylesheet" href="{{asset('panel/assets/css/rtl-css/plugins/fileinput-rtl.css')}}">
 @endpush
 @push('js')
+<script>
+    function submitForm() {
+      document.getElementById("submitButton").disabled = true;
+      document.getElementById("defaultForm").submit();
+    }
+  </script>
      <!--Upload button Script Start-->
    <script src="{{asset('panel/assets/js/fileinput.min.js')}}"></script>
    <!--Upload button Script End-->
