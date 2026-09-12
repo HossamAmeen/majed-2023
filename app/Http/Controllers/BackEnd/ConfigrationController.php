@@ -1,17 +1,16 @@
 <?php
 
 namespace App\Http\Controllers\BackEnd;
-use App\Models\User;
+use App\Models\Bill;
 use App\Models\Configration;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
-use App\Models\{Order,Product,Bill};
-use Illuminate\Support\Facades\Response;
-use Yajra\DataTables\DataTables;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Artisan;
 class ConfigrationController extends BackEndController
 {
     public function __construct(Configration $model)
@@ -83,10 +82,9 @@ class ConfigrationController extends BackEndController
 
     public function test()
     {
-        
-         Artisan::call('db:backup');
-     
-         dd(Artisan::output());
+        Artisan::call('database:backup');
+
+        dd(Artisan::output());
     }
     public function sendToken(Request $request)
     {
@@ -154,7 +152,7 @@ class ConfigrationController extends BackEndController
         ->get();
         // return $dayOrders->product; 
         $dayProductBuyingPrice = $dayOrders->sum(function($t){ 
-        return $t->quantity * ( $t->product->purchasing_price ); 
+        return $t->quantity * ( $t->product?->purchasing_price ); 
         });
        
         
@@ -199,7 +197,7 @@ class ConfigrationController extends BackEndController
 
       
          $yesterDayProductBuyingPrice = $yesterdayOrders->sum(function($t){ 
-        return $t->quantity * ( $t->product->purchasing_price ); 
+        return $t->quantity * ( $t->product?->purchasing_price ); 
         });   
              
         $monthOrders= Order::where('status' , 'sold-out')->whereYear('date', now()->year)->whereMonth('date', now()->month)->get();

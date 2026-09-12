@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\BackEnd;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Response;
-use Faker\Provider\Image as ProviderImage;
-use File,Carbon;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
+use Intervention\Image\Facades\Image;
 
 class BackEndController extends Controller
 {
@@ -116,7 +118,7 @@ class BackEndController extends Controller
     {
 
         $photo = $request->file('image');
-        $fileName = time() . str_random('10') . '.' . $photo->getClientOriginalExtension();
+        $fileName = time() . Str::random(10) . '.' . $photo->getClientOriginalExtension();
         $destinationPath = 'uploads/' . $this->getClassNameFromModel() . '/';
         $image = Image::make($photo->getRealPath())->resize($height, $width);
 
@@ -130,8 +132,7 @@ class BackEndController extends Controller
     }
     protected function storeFile($file)
     {
-        $mytime = Carbon\Carbon::now();
-        $file = Input::file('file');
+        $mytime = Carbon::now();
         $path = '/' . $this->pluralModelName();
         if (!File::isDirectory($path)) {
             File::makeDirectory($path, 0777, true, true);
@@ -165,7 +166,7 @@ class BackEndController extends Controller
 
     protected function pluralModelName()
     {
-        return str_plural($this->getModelName());
+        return Str::plural($this->getModelName());
     }
 
     protected function getModelName()

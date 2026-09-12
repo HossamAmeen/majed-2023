@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Http\Controllers\BackEnd;
-use App\Models\{Order,Product};
-use Illuminate\Support\Facades\Auth;
-
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends BackEndController
 {

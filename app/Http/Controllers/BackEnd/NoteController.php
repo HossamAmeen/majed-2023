@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\BackEnd;
 
+use App\Models\Note;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Models\{Note};
-use Auth;
+use Illuminate\Support\Facades\Auth;
 class NoteController extends BackEndController
 {
     public function __construct(Note $model)

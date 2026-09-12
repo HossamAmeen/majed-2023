@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\BackEnd;
 
 
+use App\Models\Bill;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Models\{Product,Bill,Order};
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class BillController extends BackEndController
 {
@@ -21,49 +20,51 @@ class BillController extends BackEndController
         $requestArray = $request->all();
         $requestArray['user_id'] = Auth::user()->id;
         $data = [];
-        if(is_array($request->products)){
-            $bill = $this->model->create($requestArray);
-            for($i=0; $i<count($request->products) ; $i++){
-                if($request->products[$i] == null || $request->products[$i] == 'null'){
-                    continue ;
-                }
-                $product = Product::where('code',$request->products[$i])->first();
-                if(!isset($product)){
-                    $this->destroy($bill->id);
-                    return response(['error'=>"كود هذا المنتج غير صالح " .$request->products[$i] ] , 400);
-                    // return json_encode(['id' => $bill->id] , 400);
-                    return redirect()->back()->withErrors(['errorProduct' => "كود هذا المنتج غير صالح " .$request->products[$i] ])->withInput();
-                }
-                $price = $request->costs[$i] ?? $product->selling_price  ;
-
-                $quantity = $request->quantity[$i] ?? 1 ;
-                if($product->quantity < $quantity){
-                    $this->destroy($bill->id);
-                    return response(['error'=> "هذا المنتج($product->name) اقل من الكمية المطلوبة او ناقص"] , 400);
-                    return json_encode(['id' => $bill->id],400);
-                    return redirect()->back()->withErrors(['errorProduct' => "هذا المنتج اقل من الكمية المطلوبة او ناقص" .$product->name ])->withInput();
-                }
-                else
-                {
-                    $product->quantity -= $quantity ;
-                    $product->save(); 
-                }
-                array_push($data, [
-                    'product_price'=> $product->selling_price,
-                    'price'=> $price,
-                    'product_name'=>  $product->name,
-                    'quantity'=>$quantity,
-                    'date'=>date('Y-m-d'),
-                    'discount'=>$request->discounts[$i]?? 0,
-                    'user_id'=>Auth::user()->id,
-                    'product_id'=>$product->id,
-                    'bill_id'=>$bill->id,
-                ]);
-                
-                
-            }
-            Order::insert($data);
+        if(!is_array($request->products)){
+            return response(['error'=>"لا يوجد منتجات في هذه الفاتوره"] , 400);
         }
+        $bill = $this->model->create($requestArray);
+        for($i=0; $i<count($request->products) ; $i++){
+            if($request->products[$i] == null || $request->products[$i] == 'null'){
+                continue ;
+            }
+            $product = Product::where('code',$request->products[$i])->first();
+            if(!isset($product)){
+                $this->destroy($bill->id);
+                return response(['error'=>"كود هذا المنتج غير صالح " .$request->products[$i] ] , 400);
+                // return json_encode(['id' => $bill->id] , 400);
+                return redirect()->back()->withErrors(['errorProduct' => "كود هذا المنتج غير صالح " .$request->products[$i] ])->withInput();
+            }
+            $price = $request->costs[$i] ?? $product->selling_price  ;
+
+            // Cast explicitly: PHP 8 is strict about arithmetic on non numeric input.
+            $quantity = (float) ($request->quantity[$i] ?? 1);
+            if($product->quantity < $quantity){
+                $this->destroy($bill->id);
+                return response(['error'=> "هذا المنتج($product->name) اقل من الكمية المطلوبة او ناقص"] , 400);
+                return json_encode(['id' => $bill->id],400);
+                return redirect()->back()->withErrors(['errorProduct' => "هذا المنتج اقل من الكمية المطلوبة او ناقص" .$product->name ])->withInput();
+            }
+            else
+            {
+                $product->quantity -= $quantity ;
+                $product->save(); 
+            }
+            array_push($data, [
+                'product_price'=> $product->selling_price,
+                'price'=> $price,
+                'product_name'=>  $product->name,
+                'quantity'=>$quantity,
+                'date'=>date('Y-m-d'),
+                'discount'=>$request->discounts[$i]?? 0,
+                'user_id'=>Auth::user()->id,
+                'product_id'=>$product->id,
+                'bill_id'=>$bill->id,
+            ]);
+            
+            
+        }
+        Order::insert($data);
         $bill = Bill::where('id', $bill->id)->with('orders')->first();
         return view('back-end.bills.bill2' , compact('bill'));
         return response(['id' => $bill->id], 200);
@@ -83,7 +84,10 @@ class BillController extends BackEndController
            
            
             $order = Order::where('id' ,$request->orders[$i] )->first();
-            
+
+            // Cast explicitly: PHP 8 is strict about arithmetic on non numeric input.
+            $quantity = (float) ($request->quantity[$i] ?? 0);
+
             $product = Product::find($order->product_id);
             if(!isset($product)){
                 $requestArray['code'] =  $this->generateRandomNumber(5);
@@ -94,28 +98,28 @@ class BillController extends BackEndController
                 $product = Product::create([
                     'name'=>$order->product_name,
                     'code'=> $requestArray['code'],
-                    'quantity'=>abs($order->quantity - $request->quantity[$i] ),
+                    'quantity'=>abs($order->quantity - $quantity ),
                     'user_id'=> Auth::user()->id
                 ]);
                
             }
             else
             {
-                if(($product->quantity + $order->quantity ) < $request->quantity[$i]){
+                if(($product->quantity + $order->quantity ) < $quantity){
                     return redirect()->back()->withErrors(['errorProduct' => " هذا المنتج اقل من الكمية المطلوبة او ناقص "  .$product->name ])->withInput();
                 }
                 else
                 {
-                    $product->quantity = ($product->quantity + $order->quantity ) - $request->quantity[$i] ;
+                    $product->quantity = ($product->quantity + $order->quantity ) - $quantity ;
                     $product->save(); 
                 }
                
             }
-            if($request->quantity[$i] == 0){
+            if($quantity == 0){
                 $order->delete();
             }
             else
-                $order->update(['quantity' =>$request->quantity[$i] , 'product_id'=> $product->id]);
+                $order->update(['quantity' =>$quantity , 'product_id'=> $product->id]);
         }
 
 

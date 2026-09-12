@@ -8,31 +8,17 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array
+     * Define the application's command schedule.
      */
-    protected $commands = [
-        //
-    ];
+    protected function schedule(Schedule $schedule): void
+    {
+        $schedule->command('database:backup')->twiceDaily(0, 12);
+    }
 
     /**
-     * Define the application's command schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
-     */
-   
-    protected function schedule(Schedule $schedule)
-    {
-       $schedule->command('database:backup')->twiceDaily(0,12);
-    }
-    /**
      * Register the commands for the application.
-     *
-     * @return void
      */
-    protected function commands()
+    protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
 

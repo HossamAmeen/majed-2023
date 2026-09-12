@@ -1,15 +1,12 @@
 <?php
 namespace App\Http\Controllers\BackEnd;
-use Illuminate\Http\Request;
-use App\Models\{Product ,Order , Bill};
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use App\Exports\ProductsExport;
+use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use DNS1D;
-use Image ,DB;
-use PDF;
+use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as PDF;
 class ProductController extends BackEndController
 {
     public function __construct(Product $model)
@@ -20,7 +17,8 @@ class ProductController extends BackEndController
     public function store(Request $request){
 
         $requestArray = $request->all();
-        $total =$request->purchasing_price * $request->quantity;
+        // Cast explicitly: PHP 8 is strict about arithmetic on non numeric input.
+        $total = (float) $request->purchasing_price * (float) $request->quantity;
         $requestArray['total_price'] =$total;
         $requestArray['user_id'] = Auth::user()->id;
         $requestArray['code'] =  $this->generateRandomNumber(5);
@@ -56,7 +54,8 @@ class ProductController extends BackEndController
 
         $row = $this->model->FindOrFail($id);
         $requestArray = $request->all();
-        $total =$request->purchasing_price * $request->quantity;
+        // Cast explicitly: PHP 8 is strict about arithmetic on non numeric input.
+        $total = (float) $request->purchasing_price * (float) $request->quantity;
         $requestArray['total_price'] =$total;
       
         $requestArray['user_id'] = Auth::user()->id;
@@ -98,8 +97,8 @@ class ProductController extends BackEndController
         // $products = $this->model->get();  
         $data['productsCount'] =   count($rows);
         $data['totalQuantity'] =   $rows->sum('quantity');
-        $data['totalBuyCost'] =   Product::value(DB::raw("SUM(quantity * purchasing_price )"));
-        $data['totalSellCost'] =   Product::value(DB::raw("SUM(quantity * selling_price )")) ; 
+        $data['totalBuyCost'] =   (float) Product::sum(DB::raw('quantity * purchasing_price'));
+        $data['totalSellCost'] =   (float) Product::sum(DB::raw('quantity * selling_price'));
         return $data;
     }
     public function checkNumber($code)

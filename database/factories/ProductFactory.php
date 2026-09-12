@@ -1,27 +1,34 @@
 <?php
 
-/** @var \Illuminate\Database\Eloquent\Factory $factory */
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+namespace Database\Factories;
 
-use App\Producty;
-use Faker\Generator as Faker;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
-$factory->define(App\Models\Product::class, function (Faker $faker) {
-    return [
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-           'name' => $faker->name,
-           'purchasing_price'=>$faker->randomFloat(2, 10, 100),
-           'selling_price'=>$faker->randomFloat(2, 10, 100),
-           'total_price'=>$faker->randomFloat(2, 10, 100),
-            'quantity'=> $faker->numberBetween(50, 500),
-            'code'=>$faker->unique()->numerify('#####'),
-           'discount'=>$faker->randomFloat(2, 0, 1),
-           'user_id'=>User::all()->random()->id,
-          'category_id'=> Category::all()->random()->id,
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Product>
+ */
+class ProductFactory extends Factory
+{
+    protected $model = Product::class;
 
-
-
-           ];
-});
+    /**
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => $this->faker->name(),
+            'purchasing_price' => $this->faker->randomFloat(2, 10, 100),
+            'selling_price' => $this->faker->randomFloat(2, 10, 100),
+            'total_price' => $this->faker->randomFloat(2, 10, 100),
+            'quantity' => $this->faker->numberBetween(50, 500),
+            'code' => $this->faker->unique()->numerify('#####'),
+            'discount' => $this->faker->randomFloat(2, 0, 1),
+            'user_id' => User::query()->inRandomOrder()->value('id'),
+            'category_id' => Category::query()->inRandomOrder()->value('id'),
+        ];
+    }
+}

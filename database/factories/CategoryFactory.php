@@ -1,20 +1,26 @@
 <?php
 
-/** @var \Illuminate\Database\Eloquent\Factory $factory */
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+namespace Database\Factories;
 
-use App\Category;
-use Faker\Generator as Faker;
+use App\Models\Category;
 use App\Models\User;
-$factory->define(App\Models\Category::class, function (Faker $faker) {
-    return [
+use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Category>
+ */
+class CategoryFactory extends Factory
+{
+    protected $model = Category::class;
 
-        'name' => $faker->name,
-        'user_id'=>User::all()->random()->id,
-
+    /**
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => $this->faker->name(),
+            'user_id' => User::query()->inRandomOrder()->value('id'),
         ];
-
-});
-
+    }
+}

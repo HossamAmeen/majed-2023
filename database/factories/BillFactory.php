@@ -1,19 +1,27 @@
 <?php
 
-/** @var \Illuminate\Database\Eloquent\Factory $factory */
+namespace Database\Factories;
 
-use App\Bill;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-
-use Faker\Generator as Faker;
+use App\Models\Bill;
 use App\Models\User;
-$factory->define(App\Models\Bill::class, function (Faker $faker) {
-    return [
-        'name' => $faker->name,
-        'phone' => $faker->phoneNumber,
-        'user_id'=>App\Models\User::all()->random()->id,
-       
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-    ];
-});
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Bill>
+ */
+class BillFactory extends Factory
+{
+    protected $model = Bill::class;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => $this->faker->name(),
+            'phone' => $this->faker->phoneNumber(),
+            'user_id' => User::query()->inRandomOrder()->value('id'),
+        ];
+    }
+}

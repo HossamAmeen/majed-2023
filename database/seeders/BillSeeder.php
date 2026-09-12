@@ -1,17 +1,17 @@
 <?php
 
+namespace Database\Seeders;
+
+use App\Models\Bill;
 use Illuminate\Database\Seeder;
 
 class BillSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
-        //factory(App\Models\Bill::class,100)->create();
-
+        // Bill::factory()->count(100)->create();
     }
 }

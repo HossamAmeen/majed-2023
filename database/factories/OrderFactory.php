@@ -1,25 +1,36 @@
 <?php
 
-/** @var \Illuminate\Database\Eloquent\Factory $factory */
+namespace Database\Factories;
 
-use App\Order;
-use Faker\Generator as Faker;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-
+use App\Models\Bill;
+use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
-$factory->define(App\Models\Order::class, function (Faker $faker) {
-    $array=['sold-out','Returned'];
-    return [
-        'product_price'=>rand(150 , 550),
-        'price'=>$faker->numberBetween(50, 500),
-        'quantity'=> $faker->randomFloat(2, 1, 10),
-        'date'=>$faker->date($format = 'Y-m-d', $max = 'now'),
-        'status'=>$faker->randomElement($array),
-        'product_name'=>$faker->name,
-        'discount'=> $faker->randomDigit,
-        'bill_id'=>App\Models\Bill::all()->random()->id,
-        'user_id'=>App\Models\User::all()->random()->id,
-        'product_id'=>App\Models\Product::all()->random()->id,
-    ];
-});
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Order>
+ */
+class OrderFactory extends Factory
+{
+    protected $model = Order::class;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'product_price' => $this->faker->numberBetween(150, 550),
+            'price' => $this->faker->numberBetween(50, 500),
+            'quantity' => $this->faker->randomFloat(2, 1, 10),
+            'date' => $this->faker->date('Y-m-d'),
+            'status' => $this->faker->randomElement(['sold-out', 'Returned']),
+            'product_name' => $this->faker->name(),
+            'discount' => $this->faker->randomDigit(),
+            'bill_id' => Bill::query()->inRandomOrder()->value('id'),
+            'user_id' => User::query()->inRandomOrder()->value('id'),
+            'product_id' => Product::query()->inRandomOrder()->value('id'),
+        ];
+    }
+}
