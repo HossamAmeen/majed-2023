@@ -1,0 +1,50 @@
+[project]
+name = "shop-backend"
+version = "1.0.0"
+description = "4MD shop point of sale API (Django REST Framework)"
+requires-python = ">=3.13"
+
+[tool.black]
+line-length = 110
+target-version = ["py313"]
+extend-exclude = "(legacy_laravel|xPrinter|frontend|migrations)"
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+extend-exclude = ["legacy_laravel", "xPrinter", "frontend", "**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM", "RUF"]
+ignore = [
+    "RUF001", # Arabic text contains characters ruff flags as "ambiguous"
+    "RUF012", # DRF/Django class attributes are intentionally mutable lists
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106"]
+"config/settings/*" = ["F405"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config", "utils"]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = false
+exclude = ["legacy_laravel/", "xPrinter/", "frontend/", "migrations/", "tests/", "conftest.py"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.bandit]
+exclude_dirs = ["legacy_laravel", "xPrinter", "frontend", ".venv", "tests"]
+# Hardcoded-secret detection is done by ruff (S105), which does not flag Arabic
+# validation messages under a "password" key the way bandit does.
+skips = ["B105"]
+
+[tool.coverage.run]
+source = ["apps", "utils"]
+omit = ["*/migrations/*", "*/tests/*"]

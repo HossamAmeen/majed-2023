@@ -1,0 +1,107 @@
+:root {
+  --sidebar-width: 250px;
+  --sidebar-bg: #1f2937;
+  --sidebar-fg: #d1d5db;
+  --sidebar-active: #0d6efd;
+  --bs-font-sans-serif: 'Cairo', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+}
+
+body {
+  background: #f3f4f6;
+  font-family: var(--bs-font-sans-serif);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-fg);
+  overflow-y: auto;
+  z-index: 1040;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-sidebar .nav-link {
+  color: var(--sidebar-fg);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.app-sidebar .nav-link:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.app-sidebar .nav-link.router-link-active {
+  background: var(--sidebar-active);
+  color: #fff;
+}
+
+.app-main {
+  margin-inline-start: var(--sidebar-width);
+  padding: 1.5rem;
+}
+
+.app-topbar {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  /* Hidden with display (not a transform): in RTL an off-screen transform widens the page. */
+  .app-sidebar:not(.open) {
+    display: none;
+  }
+
+  .app-sidebar.open {
+    box-shadow: 0 0 1.5rem rgb(0 0 0 / 30%);
+  }
+
+  .app-main {
+    margin-inline-start: 0;
+    padding: 1rem;
+  }
+
+  .app-topbar {
+    display: flex;
+  }
+}
+
+.card {
+  border: 0;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.table-nowrap td,
+.table-nowrap th {
+  white-space: nowrap;
+}
+
+.ltr {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+}

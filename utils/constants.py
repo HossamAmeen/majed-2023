@@ -1,0 +1,7 @@
+from decimal import Decimal
+
+MONEY_MAX_DIGITS = 14
+MONEY_DECIMAL_PLACES = 2
+ZERO_MONEY = Decimal("0")
+
+PRODUCT_CODE_LENGTH = 5

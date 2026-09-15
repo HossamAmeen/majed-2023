@@ -4,170 +4,113 @@ Guidance for AI coding agents working in this repository.
 
 ## What this is
 
-An Arabic (RTL) admin panel and point-of-sale system for a single retail shop. It covers
-products and stock, bills (invoices), orders (bill line items), notes, users, and a daily,
-monthly, and yearly sales statistics page. It is server-rendered Blade with jQuery, with no
-SPA and no public API.
+An Arabic (RTL) point-of-sale and admin panel for a single clothing shop: products and
+stock, bills (invoices) with barcode scanning and thermal receipts, orders (bill lines) and
+returns, notes, staff users with three roles, and sales statistics.
 
-- **Stack:** Laravel 10, PHP 8.1+ (the most recent work targets PHP 8.2), MySQL.
-- **Key packages:** `laravel/ui` (auth scaffolding), `maatwebsite/excel` (product export),
-  `carlos-meneses/laravel-mpdf` (product PDF export), `milon/barcode` (product barcodes),
-  `intervention/image`.
-- **UI language:** Arabic. `config/app.php` sets `locale` to `ar`. Flash messages, validation
-  errors, and labels are written in Arabic, so keep new user-facing strings in Arabic.
+- **Backend (repo root):** Django 6.1, Django REST Framework, SimpleJWT, django-filter,
+  drf-spectacular, SQLite, Celery + Redis for scheduled backups. Python 3.13+.
+- **Frontend (`frontend/`):** Vue 3 + TypeScript, Vite, Vue Router, Pinia, axios,
+  Bootstrap 5 RTL, JsBarcode.
+- **UI language:** Arabic. API error `detail` messages and UI strings are Arabic; keep new
+  user-facing text in Arabic. Code, comments and docs are English.
 
 ## Out of scope
 
-- **`xPrinter/`** and `xPrinter_old.rar` hold separate thermal-printer tooling. Don't read,
-  modify, or refactor them unless the user asks.
-- `image for setting of printer.rar`, `error_log`, `public/error_log`, `tasks.txt`, and
-  `my tasks.txt` are stray files, not source code.
+- `legacy_laravel/` is the previous Laravel app, kept for reference. Don't modify it; read
+  it only to check old behavior.
+- `xPrinter/`, `xPrinter_old.rar`, `image for setting of printer.rar`, `error_log`,
+  `tasks.txt` and `my tasks.txt` are unrelated tooling or stray files. Leave them alone.
 
-## Setup and commands
+## Commands
 
 ```bash
-composer install
-cp .env.example .env && php artisan key:generate   # then set DB_* for MySQL
-php artisan migrate --seed                          # seeds admin user + config row id=1
-php artisan serve                                   # app lives under /admin
-php artisan test                                    # PHPUnit (tests/Unit, tests/Feature)
-php artisan database:backup                         # mysqldump -> storage/backups/Y-m-d.sql
+make help            # list all commands
+make install         # .venv + requirements/development.txt + frontend npm ci
+make run             # migrate, then Django on :8000 + Vite on :5173 together (Ctrl+C stops both)
+make run-all         # run + Celery worker and beat (needs Redis)
+make run-backend     # or run-frontend: one side only
+make test            # pytest + vitest
+make lint            # ruff, black --check, mypy, bandit, vue-tsc, oxlint, eslint
+make check           # lint + test + makemigrations --check + OpenAPI validation
 ```
 
-- **Seeded login:** user name `admin`, password `admin`. The login form's `login` field
-  accepts either an email or a `user_name` (see `LoginController::findUsername`).
-- **Scheduler:** `database:backup` runs twice a day (`app/Console/Kernel.php`). It needs
-  `mysqldump` on the PATH.
-- **Frontend build:** `npm run dev` compiles `resources/js` and `resources/sass`, but the
-  panel doesn't use that output. The real panel assets are static files under
-  `public/panel/assets/`, loaded by `back-end/layout/app.blade.php`. Page-specific JS goes
-  inline through `@push('js')` in the views.
+Run backend commands with `.venv/bin/python` / `.venv/bin/pytest`. If the system npm
+fails with `Cannot read properties of null (reading 'edgesOut')` (old distro npm 9), use
+`npx -y npm@11 install`. The Makefile switches to npm 11 automatically when npm is older
+than 10.
 
 ## Architecture
 
-### Routing (`routes/web.php`)
+Read `docs/architecture/overview.md` and the relevant `docs/workflows/*.md` before
+changing business logic, and update the workflow doc when rules change.
 
-- Every route sits under the `/admin` prefix. `Auth::routes()` and the password-reset routes
-  are public. Everything else uses the `auth` middleware.
-- `routes/api.php` is empty.
-- `GET admin/bills/search` must stay above `Route::resource('bills', ...)`. Otherwise
-  `bills/{bill}` captures it.
-- `RouteServiceProvider` keeps `$namespace = 'App\Http\Controllers'` because `Auth::routes()`
-  registers string actions. Don't remove it.
+Each Django app in `apps/` uses the same layers. Keep them separate:
 
-### Generic CRUD base: `app/Http/Controllers/BackEnd/BackEndController.php`
+- `views.py`: thin. Validate with a serializer, call a service, and return a serializer of
+  the result. Permissions come from `apps/common/permissions.py`.
+- `serializers.py`: validation and representation only. Plain CRUD models (notes,
+  configuration) use `utils.serializers.BaseModelSerializer` for audit fields.
+- `services.py`: business operations and `transaction.atomic`. Raise
+  `apps.common.exceptions.BusinessRuleError` (400) with an Arabic message.
+- `selectors.py`: querysets, `select_related`/`prefetch_related`, aggregates.
+- `filters.py`: django-filter FilterSets. Lists use limit/offset pagination.
 
-Each resource controller passes its model to `parent::__construct()`. The base class then
-provides `index`, `create`, `edit`, `show`, and `destroy`, and derives names from the model
-class:
+API routes live under `/api/v1/` (`config/urls.py`). Each app registers its ViewSets with
+a `SimpleRouter`, not a `DefaultRouter`, because several routers are mounted at the same prefix.
 
-| Derived value | Example for `Product` |
-|---|---|
-| `getModelName()` | `Product` |
-| `pluralModelName()` | `Products` |
-| `getClassNameFromModel()` (route name and view folder) | `products` |
+## Domain rules that are easy to break
 
-Views therefore follow `resources/views/back-end/{plural}/{index,create,edit,form}.blade.php`.
-Subclasses customize the base through these hook methods, so override a hook before you
-rewrite an action:
-
-- `filter($rows)`: query-string filters.
-- `with()`: eager loads.
-- `append($row)`: extra data for the create and edit views.
-- `appendIndex($rows)`: extra data for the index view.
-- `destoryRelationShip($id)`: cleanup after a delete. The misspelling is the real method name.
-
-Subclasses write their own `store` and `update`. The common pattern is
-`$request->all()` → set `user_id = Auth::id()` → `create`/`update` → flash `action` → redirect
-to `{plural}.index`. There are no FormRequests or `validate()` calls in the active
-controllers, and writes rely on `$fillable`. **When you add a column, add it to the model's
-`$fillable` too.**
-
-### Domain model and stock logic
-
-- **`Product`:** name, `purchasing_price`, `selling_price`, `quantity` (the stock level),
-  `total_price` (purchasing price × quantity, computed in the controller), and `code` (a
-  random unique 5-digit number generated on store). Uses soft deletes.
-- **`Bill`:** customer name and phone, `discount`, `user_id`. It `hasMany` `Order`. Uses soft
-  deletes.
-- **`Order`:** one bill line. It snapshots `product_name`, `product_price`, `price`,
-  `quantity`, `discount`, and `date`, and has `status` (default `sold-out`). `product()`
-  includes trashed products. Uses soft deletes, and **a soft-deleted order or bill counts as
-  "returned"** in the statistics and in the `?returned=` filter.
-- **`Note`:** free-text notes. **`Configration`:** the single settings row, which must be
-  `id = 1`.
-
-Stock changes live in the controllers. Keep these paths consistent with each other:
-
-- **`BillController::store`:** called over AJAX from `bills/create.blade.php`. It receives
-  the parallel arrays `products[]` (product **codes**), `quantity[]`, `discounts[]`, and
-  optionally `costs[]`. It decrements product stock and bulk-inserts `Order` rows.
-  - On failure it deletes the bill (which restores stock) and returns HTTP 400 with an Arabic
-    `{error: ...}` message.
-  - On success it returns the rendered `back-end.bills.bill2` receipt HTML.
-- **`BillController::update`:** adjusts stock by the quantity difference. It re-creates a
-  missing product with a new code, and deletes an order whose quantity is set to 0.
-- **`BillController::destroy` and `OrderController::destroy`:** return quantity to the
-  product, restoring a soft-deleted product if needed. Deleting a bill's last order also
-  deletes the bill.
-- **`ProductController::show($code)`:** looks the product up by **code**, not id, and returns
-  JSON. The bill form uses it for live product lookups.
-- **Dashboard statistics:** `ConfigrationController::append()` feeds
-  `back-end/configrations/edit.blade.php`. `ConfigrationController::index` redirects to
-  `configrations/1/edit`.
-
-### Roles and authorization
-
-`users.role` takes three values: `1` = master, `2` = admin, `3` = employee.
-
-- Access control lives **only in Blade views**. Examples: `@if(Auth::user()->role == 1)` in
-  `layout/side-bar.blade.php`, and `shared/buttons/delete.blade.php`.
-- The `checkAdmin` middleware (`role == 1`) is registered in `Http/Kernel.php` but isn't
-  applied to any route. Routes only check `auth`.
-- If a change needs real enforcement, add it server-side as well.
-
-### Shared view data
-
-`AppServiceProvider::boot` shares `$briefs = Configration::find(1)` with every view. It
-wraps the call in try/catch so the app still boots without a database.
-`app/helpers/helpers.php` (autoloaded through composer `files`) provides `is_active()` for
-sidebar highlighting.
-
-## Legacy and dead code
-
-This project began as a copy of a clinic or news website project, and several leftovers are
-not wired into any route. Several of them reference models that don't exist (`News`,
-`Clinic`, `Drug`, `Briefs`, `App\Client`, and others). Don't try to "fix" or extend them
-unless asked:
-
-- `HomeController`, `MobileController`, `ClientController`, `PrintController`,
-  `BackEnd/BriefController`.
-- `app/Http/Requests/BackEnd/*`: these requests aren't used by any active controller.
-- The models `Article`, `City`, `Governorate`, `OrderProduct`, and `Bills_Product`. The
-  duplicate `BillsProduct` is only used by `Bill::billedProducts()`.
-- The views `front-end/*`, `ajax/*`, `bills/bill23.blade.php`, `bills/form_backup.php`,
-  `welcome`, `home`, `qrcode`, `print`, and `bills`.
-- The `admin/test` route runs `database:backup` and then calls `dd()`. It is debug-only.
-- `ConfigrationController::getAllOrder` and `getAllPrice` compute values but return nothing.
+- **Soft delete is meaningful.** `Product`, `Bill`, `Order` and `User` inherit
+  `SoftDeleteModel`. `Model.objects` hides deleted rows; `Model.all_objects` includes them.
+  A soft-deleted order or bill **is a return**, and statistics and `?returned=true` read
+  them. Never hard-delete sales.
+- **Stock changes only through `apps.products.services.StockService`.** `take()` is a
+  conditional `UPDATE ... quantity >= n` and raises `InsufficientStockError`.
+  `give_back()` adds units, restores a soft-deleted product with only the returned units, or
+  re-creates a vanished product under a new code. `BillService` and `OrderService` use it.
+  Keep sales, bill edits and returns consistent with each other.
+- **Services re-query orders** with `Order.objects.filter(bill=bill)`. They avoid
+  `bill.orders`, because views may pass a bill with a stale prefetch cache.
+- **Order lines copy** `product_name`, `product_price` and `price` at sale time. Line total is
+  `price * quantity - discount` (the discount applies to the whole line). Bill net is the sum
+  of line totals minus the bill discount.
+- **Product `code`** is a server-generated 5-digit number, unique among alive products
+  (partial unique constraint) and never reused (`ProductCodeService` checks `all_objects`).
+- **`ShopConfiguration`** is a singleton (`pk=1`, created by migration
+  `dashboard/0003`); use `ShopConfiguration.load()`.
+- **Roles** (`utils.enums.Role`): 1 master (users, products, everything), 2 admin
+  (statistics and configuration), 3 employee (bills, orders, notes). Enforce roles in
+  permission classes. The Vue router meta and sidebar only hide pages.
+- **`user_name` is the login field.** `UserNameOrEmailBackend` also accepts email. Unique
+  checks on `user_name` must use `User.all_objects` (deleted users still hold their names).
+- **Every model inherits `apps.common.models.BaseModel`** (`created_at`, `updated_at`,
+  `created_by`, `updated_by`). Services set the audit users explicitly.
+- **Error body** is always `{"detail": str, "errors": dict | null}`
+  (`apps.common.exceptions.api_exception_handler`). The frontend reads it with
+  `getErrorMessage` / `getFieldErrors` in `frontend/src/utils/errors.ts`.
 
 ## Conventions and gotchas
 
-- **Match the existing style.** `.editorconfig` sets 4-space indentation and LF line endings.
-  StyleCI uses the `laravel` preset.
-- **Keep the existing misspelled identifiers.** They are wired into routes, views, and table
-  names: `Configration` / `configrations`, `destoryRelationShip`, `paswordreset`, `sendToken`.
-- **Migrations are old-style named classes.** Several are wrapped in
-  `if (!Schema::hasTable(...))` because they were run against an existing production
-  database. For schema changes, add a new migration and don't edit old ones.
-- `Schema::defaultStringLength(191)` is set to fit the index key length limits of older
-  MySQL versions.
-- Several controllers call `ini_set('memory_limit', ...)`. The orders index paginates 1000
-  rows per page, and the bills sidebar link loads `?dateSearch=<year>&limit=500`. Keep large
-  index pages bounded.
-- After login, users go to `/admin/edit-account`, set by `RouteServiceProvider::HOME` and
-  `LoginController::$redirectTo`.
-- **Tests:** only the example tests exist, and `phpunit.xml` configures no test database.
-  Any test that touches the database uses the connection in `.env`, so set up a separate
-  database, such as SQLite in memory, before writing database tests.
-- **Don't commit** `.env`, `vendor/`, `node_modules/`, database dumps in `storage/backups/`,
-  or new archive files.
+- **Formatting:** black and ruff (line length 110) for Python; prettier (no semicolons,
+  single quotes, width 100) for the frontend. `.editorconfig` sets 4 spaces for Python and
+  2 spaces for frontend files.
+- **Type hints** on backend code; mypy runs with the django-stubs and DRF plugins.
+- **Migrations:** add new migrations; don't edit applied ones. After model changes, run
+  `makemigrations` and commit the result. `make check` fails on missing migrations.
+- **Settings:** Django 6.1 email uses `MAILERS` (built by `build_mailers()` in
+  `config/settings/base.py`), not the deprecated `EMAIL_*` settings.
+- **Tests:** pytest with fixtures in the root `conftest.py` (`auth_client`, `master`,
+  `admin_user`, `employee`) and factories in `apps/*/tests/factories.py`. Group tests in
+  `Test*` classes with an autouse `setup` fixture. Keep the
+  `import rest_framework.throttling` in `conftest.py`: without it, freezegun tests break
+  throttling for later tests.
+- **PDF export** uses WeasyPrint (needs Pango), and its templates use
+  `{% localize off %}` so numbers are not formatted with Arabic decimal commas. The Docker
+  image installs `fonts-noto-core` for Arabic glyphs.
+- **Frontend list pages** use `usePaginatedList`. It returns plain refs inside an object,
+  so templates need `.value` (for example `list.items.value`).
+- **Printable pages** (`/bills/:id/receipt`, `/products/:id/barcode`) use `meta.blank`
+  and auto-print with `?print=1`. Open them with `openPrintWindow()`.
+- **Don't commit** `.env`, `.venv/`, `db.sqlite3*`, `backups/`, `logs/*.log`,
+  `frontend/node_modules/` or `frontend/dist/`.

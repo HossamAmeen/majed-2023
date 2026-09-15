@@ -1,18 +1,42 @@
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
+# Secrets and local config
 .env
 .env.backup
 .env.production
-.phpactor.json
-.phpunit.result.cache
-/.phpunit.cache
-Homestead.json
-Homestead.yaml
-auth.json
-npm-debug.log
-yarn-error.log
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Django runtime data
+db.sqlite3
+db.sqlite3-*
+data/
+backups/
+logs/*
+!logs/.gitkeep
+media/
+staticfiles/
+celerybeat-schedule*
+
+# Editors
 /.idea
 /.vscode
+
+# Frontend (see frontend/.gitignore too)
+frontend/node_modules/
+frontend/dist/
+
+# Old Laravel app, kept for reference in legacy_laravel/
+legacy_laravel/vendor/
+legacy_laravel/node_modules/
+legacy_laravel/public/hot
+legacy_laravel/public/storage
+legacy_laravel/storage/*.key
+legacy_laravel/.phpunit.result.cache
