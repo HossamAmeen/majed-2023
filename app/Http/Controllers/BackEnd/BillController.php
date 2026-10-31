@@ -20,12 +20,11 @@ class BillController extends BackEndController
     public function store(Request $request){
         $requestArray = $request->all();
         $requestArray['user_id'] = Auth::user()->id;
-
-            // return $request;
+        $data = [];
         if(is_array($request->products)){
             $bill = $this->model->create($requestArray);
             for($i=0; $i<count($request->products) ; $i++){
-                if($request->products[$i] == null){
+                if($request->products[$i] == null || $request->products[$i] == 'null'){
                     continue ;
                 }
                 $product = Product::where('code',$request->products[$i])->first();
@@ -49,8 +48,7 @@ class BillController extends BackEndController
                     $product->quantity -= $quantity ;
                     $product->save(); 
                 }
-               
-                Order::create([
+                array_push($data, [
                     'product_price'=> $product->selling_price,
                     'price'=> $price,
                     'product_name'=>  $product->name,
@@ -62,8 +60,11 @@ class BillController extends BackEndController
                     'bill_id'=>$bill->id,
                 ]);
                 
+                
             }
-        }       
+            Order::insert($data);
+        }
+        $bill = Bill::where('id', $bill->id)->with('orders')->first();
         return view('back-end.bills.bill2' , compact('bill'));
         return response(['id' => $bill->id], 200);
         return json_encode(['id' => $bill->id]);
